@@ -54,7 +54,7 @@
   .btn-remove { position: absolute; top: -5px; right: -5px; background: #c0392b; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 5; }
   .btn-remove:active { background: #e74c3c; }
 
-  .center-bar { height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; border-top: 2px solid #e67e22; border-bottom: 2px solid #e67e22; }
+  .center-bar { height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; border-top: 2px solid #e67e22; border-bottom: 2px solid #e67e22; transition: transform 0.3s ease; }
   .turn-text { font-size: 14px; font-weight: bold; color: #e67e22; }
   .version-info { font-size: 9px; color: #7f8c8d; text-align: center; display: flex; flex-direction: column; line-height: 1.2; margin: 0 5px; }
   .next-btn { background: #e67e22; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
@@ -63,7 +63,7 @@
   /* カスタムモーダル用スタイル */
   .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
   .modal-overlay.hidden { display: none; }
-  .modal-box { background: #34495e; padding: 20px; border-radius: 8px; width: 85%; max-width: 320px; text-align: center; border: 2px solid #e67e22; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+  .modal-box { background: #34495e; padding: 20px; border-radius: 8px; width: 85%; max-width: 320px; text-align: center; border: 2px solid #e67e22; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.3s ease; }
   .modal-message { margin-bottom: 15px; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
   .modal-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #111; color: white; border: 1px solid #7f8c8d; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
   .modal-input.hidden { display: none; }
@@ -73,6 +73,9 @@
   .modal-btn.ok:active { background: #d35400; }
   .modal-btn.cancel { background: #7f8c8d; color: white; }
   .modal-btn.cancel.hidden { display: none; }
+  
+  /* 共通の反転用クラス */
+  .rotate-180 { transform: rotate(180deg); }
 </style>
 </head>
 <body>
@@ -330,6 +333,17 @@
       p2Area.classList.remove('inactive-turn');
       p1Area.classList.add('inactive-turn');
       p1Area.classList.remove('active-turn');
+    }
+    
+    // UIの反転処理（ターンプレイヤーの向きに合わせる）
+    const centerBar = document.querySelector('.center-bar');
+    const modalBox = document.querySelector('.modal-box');
+    if (state.activePlayer === 2) {
+      centerBar.classList.add('rotate-180');
+      modalBox.classList.add('rotate-180');
+    } else {
+      centerBar.classList.remove('rotate-180');
+      modalBox.classList.remove('rotate-180');
     }
     
     renderBoard(1);
