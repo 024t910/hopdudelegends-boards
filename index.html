@@ -109,6 +109,476 @@
   <div class="center-bar">
     <div class="turn-text">Turn: <span id="turn-display">1</span></div>
     <div class="version-info">
+      <span>Ver. 2026.09.23.07.30</span>
+      <span>DB: 2026/09/23</span>
+    </div>
+    <button class="next-btn" onclick="nextTurn()">ターンエンド (IP合算)</button>
+  </div>
+
+  <!-- Player 1 -->
+  <div class="player-area p1 active-turn" id="p1-area">
+    <div class="stats-header">
+      <div class="stat-group">
+        <span class="stat-label">スコア (IP)</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(1, 'score', -1)">-</button>
+          <span class="val score-val" id="p1-score">0</span>
+          <button class="btn" onclick="updateMain(1, 'score', 1)">+</button>
+        </div>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">エネルギー</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(1, 'energy', -1)">-</button>
+          <span class="val" id="p1-energy">1</span>
+          <button class="btn" onclick="updateMain(1, 'energy', 1)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-add-char" onclick="addChar(1)">+ カードNo</button>
+    </div>
+    <div class="board-area" id="p1-board"></div>
+  </div>
+  
+  <!-- Custom Modal -->
+  <div id="custom-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <div id="modal-message" class="modal-message"></div>
+      <input type="number" id="modal-input" class="modal-input hidden" placeholder="例: 1 または 001" />
+      <div class="modal-buttons">
+        <button id="modal-btn-cancel" class="modal-btn cancel">キャンセル</button>
+        <button id="modal-btn-ok" class="modal-btn ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ハードコードされたカードデータベース (001〜100)
+  const cardDB = {
+    "1": { name: "Hop Dude", cost: 1, maxHp: 3, ip: 0 },
+    "2": { name: "Starwatcher", cost: 2, maxHp: 4, ip: 0 },
+    "3": { name: "Full Hop Alchemist", cost: 2, maxHp: 3, ip: 0 },
+    "4": { name: "Breakwater", cost: 1, maxHp: 3, ip: 0 },
+    "5": { name: "No Clouds No Problem", cost: 1, maxHp: 3, ip: 0 },
+    "6": { name: "Hop & Escape", cost: 2, maxHp: 4, ip: 0 },
+    "7": { name: "The Prodigy", cost: 2, maxHp: 3, ip: 1 },
+    "8": { name: "Future Alchemist", cost: 3, maxHp: 5, ip: 0 },
+    "9": { name: "White Wizard", cost: 3, maxHp: 4, ip: 0 },
+    "10": { name: "That Magma", cost: 3, maxHp: 3, ip: 0 },
+    "11": { name: "Little Cauldron Boy", cost: 3, maxHp: 5, ip: 0 },
+    "12": { name: "The Sheriff", cost: 3, maxHp: 4, ip: 1 },
+    "13": { name: "The Nemesis", cost: 2, maxHp: 1, ip: 1 },
+    "14": { name: "The Dark Prodigy", cost: 3, maxHp: 3, ip: 0 },
+    "15": { name: "The Black Wizard", cost: 2, maxHp: 2, ip: 0 },
+    "16": { name: "The Voidmaster Ced", cost: 2, maxHp: 1, ip: 0 },
+    "17": { name: "Dark Crispi Boi", cost: 1, maxHp: 1, ip: 0 },
+    "18": { name: "The Hop Breaker", cost: 2, maxHp: 2, ip: 0 },
+    "19": { name: "The Technician", cost: 3, maxHp: 3, ip: 0 },
+    "20": { name: "Black Market Trader", cost: 2, maxHp: 2, ip: 0 },
+    "21": { name: "The Scavenger", cost: 2, maxHp: 2, ip: 0 },
+    "22": { name: "The Gambler", cost: 3, maxHp: 3, ip: 0 },
+    "23": { name: "The Traveler", cost: 3, maxHp: 2, ip: 0 },
+    "24": { name: "Brass Monkey", cost: 3, maxHp: 2, ip: 0 },
+    "25": { name: "Mochimune", cost: 0, maxHp: 0, ip: 0 },
+    "26": { name: "The Villa", cost: 0, maxHp: 0, ip: 0 },
+    "27": { name: "Twelve (12)", cost: 0, maxHp: 0, ip: 0 },
+    "28": { name: "第三番移動式冷蔵庫", cost: 0, maxHp: 0, ip: 0 },
+    "29": { name: "Oasis", cost: 0, maxHp: 0, ip: 0 },
+    "30": { name: "The Dark Lab", cost: 0, maxHp: 0, ip: 0 },
+    "31": { name: "Umeda 1", cost: 0, maxHp: 0, ip: 0 },
+    "32": { name: "包", cost: 0, maxHp: 0, ip: 0 },
+    "33": { name: "十二番", cost: 0, maxHp: 0, ip: 0 },
+    "34": { name: "Hopbeat Records", cost: 0, maxHp: 0, ip: 0 },
+    "35": { name: "The Room", cost: 0, maxHp: 0, ip: 0 },
+    "36": { name: "北谷", cost: 0, maxHp: 0, ip: 0 },
+    "37": { name: "Crispi Boi", cost: 2, maxHp: 4, ip: 0 },
+    "38": { name: "Swell Boi", cost: 3, maxHp: 5, ip: 0 },
+    "39": { name: "Creami Boi", cost: 4, maxHp: 4, ip: 0 },
+    "40": { name: "Handi Boi", cost: 2, maxHp: 4, ip: 0 },
+    "41": { name: "Sour Grrl", cost: 4, maxHp: 4, ip: 0 },
+    "42": { name: "Chill Grrl", cost: 3, maxHp: 5, ip: 0 },
+    "43": { name: "Creative Grrl", cost: 2, maxHp: 4, ip: 0 },
+    "44": { name: "Nature Boi", cost: 4, maxHp: 4, ip: 0 },
+    "45": { name: "Wandering Boi", cost: 3, maxHp: 5, ip: 0 },
+    "46": { name: "The Gateway", cost: 3, maxHp: 2, ip: 0 },
+    "47": { name: "Slumber Party", cost: 1, maxHp: 1, ip: 0 },
+    "48": { name: "His Dark Secrets", cost: 3, maxHp: 2, ip: 0 },
+    "49": { name: "The Black Book", cost: 1, maxHp: 1, ip: 0 },
+    "50": { name: "Dark Torrent", cost: 3, maxHp: 3, ip: 1 },
+    "51": { name: "Apricot Fruit Monster", cost: 3, maxHp: 2, ip: 1 },
+    "52": { name: "Strawberry Fruit Monster", cost: 3, maxHp: 4, ip: 1 },
+    "53": { name: "Mango Fruit Monster", cost: 4, maxHp: 3, ip: 1 },
+    "54": { name: "Watermelon Fruit Monster", cost: 4, maxHp: 6, ip: 1 },
+    "55": { name: "Singularity: Peacharine", cost: 3, maxHp: 0, ip: 0 },
+    "56": { name: "Singularity: Rakau", cost: 3, maxHp: 0, ip: 0 },
+    "57": { name: "Singularity: Kohatu", cost: 4, maxHp: 0, ip: 0 },
+    "58": { name: "Singularity: Wakatu", cost: 4, maxHp: 0, ip: 0 },
+    "59": { name: "Singularity: El Dorado", cost: 4, maxHp: 0, ip: 0 },
+    "60": { name: "Singularity: Citra", cost: 5, maxHp: 0, ip: 0 },
+    "61": { name: "Singularity: Nelson", cost: 5, maxHp: 0, ip: 0 },
+    "62": { name: "Singularity: Strata", cost: 5, maxHp: 0, ip: 0 },
+    "63": { name: "WCB 1st Anniversary", cost: 1, maxHp: 0, ip: 0 },
+    "64": { name: "WCB 2nd Anniversary", cost: 1, maxHp: 0, ip: 0 },
+    "65": { name: "WCB 3rd Anniversary", cost: 2, maxHp: 0, ip: 0 },
+    "66": { name: "WCB 4th Anniversary", cost: 2, maxHp: 0, ip: 0 },
+    "67": { name: "WCB 5th Anniversary", cost: 3, maxHp: 0, ip: 0 },
+    "68": { name: "WCB 6th Anniversary", cost: 3, maxHp: 0, ip: 0 },
+    "69": { name: "WCB 7th Anniversary", cost: 4, maxHp: 0, ip: 0 },
+    "70": { name: "Super Sunrise", cost: 4, maxHp: 0, ip: 0 },
+    "71": { name: "Pineapple Party", cost: 3, maxHp: 2, ip: 1 },
+    "72": { name: "Mango Party", cost: 3, maxHp: 3, ip: 1 },
+    "73": { name: "Peach Party", cost: 4, maxHp: 3, ip: 1 },
+    "74": { name: "Passionfruit Party", cost: 4, maxHp: 4, ip: 1 },
+    "75": { name: "FHAv16", cost: 5, maxHp: 7, ip: 2 },
+    "76": { name: "FHAv23", cost: 4, maxHp: 6, ip: 2 },
+    "77": { name: "FHAv30", cost: 6, maxHp: 6, ip: 2 },
+    "78": { name: "FHAv37", cost: 4, maxHp: 6, ip: 1 },
+    "79": { name: "FHAr1", cost: 5, maxHp: 0, ip: 0 },
+    "80": { name: "Starwatcher Cryo", cost: 5, maxHp: 6, ip: 2 },
+    "81": { name: "Starwatcher Midnight", cost: 4, maxHp: 4, ip: 2 },
+    "82": { name: "Starwatcher CBD", cost: 5, maxHp: 4, ip: 2 },
+    "83": { name: "MU", cost: 5, maxHp: 4, ip: 3 },
+    "84": { name: "RA", cost: 4, maxHp: 3, ip: 3 },
+    "85": { name: "AHM", cost: 6, maxHp: 5, ip: 2 },
+    "86": { name: "Super Spicy Slumber Party", cost: 5, maxHp: 4, ip: 2 },
+    "87": { name: "The Hop-Breaker Unleashed", cost: 6, maxHp: 5, ip: 2 },
+    "88": { name: "Very Creami Boi", cost: 5, maxHp: 6, ip: 1 },
+    "89": { name: "Super Handi Boi", cost: 5, maxHp: 7, ip: 1 },
+    "90": { name: "Doctor Dankness", cost: 6, maxHp: 5, ip: 3 },
+    "91": { name: "Underground Hero", cost: 6, maxHp: 5, ip: 3 },
+    "92": { name: "Black Light", cost: 6, maxHp: 9, ip: 3 },
+    "93": { name: "Instant Classic", cost: 0, maxHp: 0, ip: 0 },
+    "94": { name: "Midtown Popup", cost: 0, maxHp: 0, ip: 0 },
+    "95": { name: "The Archnemesis", cost: 7, maxHp: 7, ip: 4 },
+    "96": { name: "FHA X", cost: 7, maxHp: 11, ip: 4 },
+    "97": { name: "The Alchemists' Shadow", cost: 7, maxHp: 8, ip: 5 },
+    "98": { name: "Ultima", cost: 8, maxHp: 14, ip: 5 },
+    "99": { name: "The Hop Oracle", cost: 8, maxHp: 12, ip: 6 },
+    "100": { name: "The Guardian", cost: 8, maxHp: 10, ip: 5 }
+  };
+
+  let state = {
+    turn: 1,
+    activePlayer: 1,
+    p1: { score: 0, energy: 1, maxEnergy: 1, chars: [] },
+    p2: { score: 0, energy: 0, maxEnergy: 0, chars: [] },
+    charIdCounter: 0,
+    gameOver: false
+  };
+
+  // カスタムモーダルの処理
+  function showModal(type, message) {
+    return new Promise(resolve => {
+      const overlay = document.getElementById('custom-modal');
+      const msgEl = document.getElementById('modal-message');
+      const inputEl = document.getElementById('modal-input');
+      const btnCancel = document.getElementById('modal-btn-cancel');
+      const btnOk = document.getElementById('modal-btn-ok');
+
+      msgEl.innerText = message;
+      overlay.classList.remove('hidden');
+
+      if (type === 'prompt') {
+        inputEl.classList.remove('hidden');
+        inputEl.value = '';
+        inputEl.focus();
+        btnCancel.classList.remove('hidden');
+      } else if (type === 'confirm') {
+        inputEl.classList.add('hidden');
+        btnCancel.classList.remove('hidden');
+      } else if (type === 'alert') {
+        inputEl.classList.add('hidden');
+        btnCancel.classList.add('hidden');
+      }
+
+      const cleanup = () => {
+        btnOk.onclick = null;
+        btnCancel.onclick = null;
+        overlay.classList.add('hidden');
+      };
+
+      btnOk.onclick = () => {
+        cleanup();
+        if (type === 'prompt') resolve(inputEl.value);
+        else resolve(true);
+      };
+
+      btnCancel.onclick = () => {
+        cleanup();
+        if (type === 'prompt') resolve(null);
+        else resolve(false);
+      };
+    });
+  }
+
+  function updateDisplay() {
+    document.getElementById('turn-display').innerText = state.turn;
+    document.getElementById('p1-score').innerText = state.p1.score;
+    document.getElementById('p1-energy').innerText = state.p1.energy;
+    document.getElementById('p2-score').innerText = state.p2.score;
+    document.getElementById('p2-energy').innerText = state.p2.energy;
+    
+    // ターンハイライト用のクラス
+    const p1Area = document.getElementById('p1-area');
+    const p2Area = document.getElementById('p2-area');
+    
+    if (state.activePlayer === 1) {
+      p1Area.classList.add('active-turn');
+      p1Area.classList.remove('inactive-turn');
+      p2Area.classList.add('inactive-turn');
+      p2Area.classList.remove('active-turn');
+    } else {
+      p2Area.classList.add('active-turn');
+      p2Area.classList.remove('inactive-turn');
+      p1Area.classList.add('inactive-turn');
+      p1Area.classList.remove('active-turn');
+    }
+    
+    // UIの反転処理（ターンプレイヤーの向きに合わせる）
+    const centerBar = document.querySelector('.center-bar');
+    const modalBox = document.querySelector('.modal-box');
+    if (state.activePlayer === 2) {
+      centerBar.classList.add('rotate-180');
+      modalBox.classList.add('rotate-180');
+    } else {
+      centerBar.classList.remove('rotate-180');
+      modalBox.classList.remove('rotate-180');
+    }
+    
+    renderBoard(1);
+    renderBoard(2);
+  }
+
+  async function updateMain(p, stat, change) {
+    if(state.gameOver) return;
+    const player = state['p' + p];
+    player[stat] = Math.max(0, player[stat] + change);
+    
+    updateDisplay();
+
+    if(stat === 'score' && player[stat] >= 20) {
+      state.gameOver = true;
+      await showModal('alert', `Player ${p} Wins! (Score: ${player[stat]})`);
+    }
+  }
+
+  async function addChar(p) {
+    if(state.gameOver) return;
+    const player = state['p' + p];
+    
+    const input = await showModal('prompt', "カードNo.を入力してください:");
+    if (input === null || input.trim() === "") return;
+    
+    // 入力値からゼロ埋めを削除して検索（1でも001でもヒットさせる）
+    const cardNo = parseInt(input.trim(), 10).toString();
+    
+    if (!cardDB[cardNo]) {
+      await showModal('alert', `データベースに カードNo.${input} が見つかりません。`);
+      return;
+    }
+
+    const dbEntry = cardDB[cardNo];
+    const costVal = dbEntry.cost;
+    const maxHpVal = dbEntry.maxHp;
+    const ipVal = dbEntry.ip;
+    const nameStr = dbEntry.name || `No.${cardNo}`;
+    
+    if (player.energy < costVal) {
+      const confirmed = await showModal('confirm', `エネルギーが足りません（現在: ${player.energy} / コスト: ${costVal}）。\nそれでも配置しますか？`);
+      if (!confirmed) {
+        return;
+      }
+    }
+    
+    player.energy = Math.max(0, player.energy - costVal);
+    
+    state['p' + p].chars.push({ 
+      id: state.charIdCounter++, 
+      cardNo: cardNo,
+      name: nameStr,
+      maxHp: maxHpVal, 
+      hp: maxHpVal, 
+      ip: ipVal 
+    });
+    
+    updateDisplay();
+  }
+
+  function updateCharHp(p, id, change) {
+    if(state.gameOver) return;
+    const player = state['p' + p];
+    const char = player.chars.find(c => c.id === id);
+    if(char) {
+      char.hp += change;
+      if(char.hp > char.maxHp) char.hp = char.maxHp;
+      if(char.hp <= 0) {
+        player.chars = player.chars.filter(c => c.id !== id);
+      }
+    }
+    updateDisplay();
+  }
+
+  function removeChar(p, id) {
+    if(state.gameOver) return;
+    state['p' + p].chars = state['p' + p].chars.filter(c => c.id !== id);
+    updateDisplay();
+  }
+
+  function renderBoard(p) {
+    const board = document.getElementById(`p${p}-board`);
+    board.innerHTML = '';
+    state['p' + p].chars.forEach(char => {
+      const el = document.createElement('div');
+      el.className = 'char-card';
+      el.innerHTML = `
+        <button class="btn-remove" onclick="removeChar(${p}, ${char.id})">×</button>
+        <div class="char-name" title="${char.name}">${char.name}</div>
+        <div class="char-ip">IP: ${char.ip}</div>
+        <div class="char-hp-label">HP (Max: ${char.maxHp})</div>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, -1)">-</button>
+          <span class="char-hp-val">${char.hp}</span>
+          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, 1)">+</button>
+        </div>
+      `;
+      board.appendChild(el);
+    });
+  }
+
+  async function nextTurn() {
+    if(state.gameOver) return;
+
+    const activePlayerState = state['p' + state.activePlayer];
+    const totalBoardIp = activePlayerState.chars.reduce((sum, char) => sum + (char.ip || 0), 0);
+    await updateMain(state.activePlayer, 'score', totalBoardIp);
+
+    if (state.gameOver) return;
+
+    state.activePlayer = state.activePlayer === 1 ? 2 : 1;
+    if (state.activePlayer === 1) state.turn++;
+    
+    const nextPlayerState = state['p' + state.activePlayer];
+    nextPlayerState.maxEnergy++;
+    nextPlayerState.energy = nextPlayerState.maxEnergy;
+    
+    updateDisplay();
+  }
+
+  updateDisplay();
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hop Dude Legends Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #111; font-family: sans-serif; overflow: hidden; user-select: none; color: #fff; touch-action: manipulation; }
+  
+  .app-container { display: flex; flex-direction: column; height: 100%; }
+  
+  .player-area { 
+    flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: hidden; 
+    transition: opacity 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+  }
+  .p2 { background: #2c3e50; transform: rotate(180deg); }
+  .p1 { background: #34495e; }
+  
+  /* ターンハイライト用のクラス */
+  .active-turn {
+    border: 2px solid #e67e22;
+    box-shadow: inset 0 0 20px rgba(230, 126, 34, 0.4);
+    opacity: 1;
+  }
+  .inactive-turn {
+    opacity: 0.4;
+  }
+  
+  .stats-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
+  .stat-group { display: flex; flex-direction: column; align-items: center; }
+  .stat-label { font-size: 11px; color: #bdc3c7; margin-bottom: 2px; }
+  .stat-controls { display: flex; align-items: center; gap: 6px; }
+  
+  .btn { background: #555; border: none; color: white; font-size: 18px; font-weight: bold; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; }
+  .btn:active { background: #777; }
+  .btn-add-char { background: #27ae60; width: auto; padding: 0 12px; font-size: 13px; height: 32px; min-width: 90px; }
+  .btn-add-char:active { background: #2ecc71; }
+  .btn-add-char:disabled { background: #7f8c8d; cursor: not-allowed; }
+  
+  .val { font-size: 20px; font-weight: bold; min-width: 28px; text-align: center; }
+  .score-val { color: #f1c40f; font-size: 26px; }
+  
+  .board-area { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; padding-bottom: 5px; }
+  .board-area::-webkit-scrollbar { display: none; }
+  
+  .char-card { position: relative; background: #1a252f; padding: 12px 6px 6px 6px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; min-width: 105px; border: 1px solid #7f8c8d; }
+  .char-name { font-size: 10px; color: #ecf0f1; margin-bottom: 2px; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .char-ip { font-size: 12px; color: #f1c40f; font-weight: bold; margin-bottom: 4px; }
+  .char-hp-label { font-size: 9px; color: #bdc3c7; margin-bottom: 2px; }
+  .char-hp-val { font-size: 16px; font-weight: bold; width: 45px; text-align: center; }
+  
+  .btn-remove { position: absolute; top: -5px; right: -5px; background: #c0392b; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 5; }
+  .btn-remove:active { background: #e74c3c; }
+
+  .center-bar { height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; border-top: 2px solid #e67e22; border-bottom: 2px solid #e67e22; transition: transform 0.3s ease; }
+  .turn-text { font-size: 14px; font-weight: bold; color: #e67e22; }
+  .version-info { font-size: 9px; color: #7f8c8d; text-align: center; display: flex; flex-direction: column; line-height: 1.2; margin: 0 5px; }
+  .next-btn { background: #e67e22; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
+  .next-btn:active { background: #d35400; }
+
+  /* カスタムモーダル用スタイル */
+  .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-overlay.hidden { display: none; }
+  .modal-box { background: #34495e; padding: 20px; border-radius: 8px; width: 85%; max-width: 320px; text-align: center; border: 2px solid #e67e22; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: transform 0.3s ease; }
+  .modal-message { margin-bottom: 15px; font-size: 14px; white-space: pre-wrap; line-height: 1.4; }
+  .modal-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #111; color: white; border: 1px solid #7f8c8d; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
+  .modal-input.hidden { display: none; }
+  .modal-buttons { display: flex; justify-content: space-between; gap: 10px; }
+  .modal-btn { flex: 1; padding: 10px; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; }
+  .modal-btn.ok { background: #e67e22; color: white; }
+  .modal-btn.ok:active { background: #d35400; }
+  .modal-btn.cancel { background: #7f8c8d; color: white; }
+  .modal-btn.cancel.hidden { display: none; }
+  
+  /* 共通の反転用クラス */
+  .rotate-180 { transform: rotate(180deg); }
+</style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- Player 2 -->
+  <div class="player-area p2 inactive-turn" id="p2-area">
+    <div class="stats-header">
+      <div class="stat-group">
+        <span class="stat-label">スコア (IP)</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(2, 'score', -1)">-</button>
+          <span class="val score-val" id="p2-score">0</span>
+          <button class="btn" onclick="updateMain(2, 'score', 1)">+</button>
+        </div>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">エネルギー</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(2, 'energy', -1)">-</button>
+          <span class="val" id="p2-energy">0</span>
+          <button class="btn" onclick="updateMain(2, 'energy', 1)">+</button>
+        </div>
+      </div>
+      <button id="btn-add-char-2" class="btn btn-add-char" onclick="addChar(2)">+ カードNo</button>
+    </div>
+    <div class="board-area" id="p2-board"></div>
+  </div>
+
+  <!-- Center Bar -->
+  <div class="center-bar">
+    <div class="turn-text">Turn: <span id="turn-display">1</span></div>
+    <div class="version-info">
       <span>Ver. 2026.09.23.07.22</span>
       <span>DB: 2026/09/23</span>
     </div>
