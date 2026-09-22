@@ -10,9 +10,23 @@
   
   .app-container { display: flex; flex-direction: column; height: 100%; }
   
-  .player-area { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: hidden; }
+  .player-area { 
+    flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: hidden; 
+    transition: opacity 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+  }
   .p2 { background: #2c3e50; transform: rotate(180deg); }
   .p1 { background: #34495e; }
+  
+  /* ターンハイライト用のクラス */
+  .active-turn {
+    border: 2px solid #e67e22;
+    box-shadow: inset 0 0 20px rgba(230, 126, 34, 0.4);
+    opacity: 1;
+  }
+  .inactive-turn {
+    opacity: 0.4;
+  }
   
   .stats-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; }
   .stat-group { display: flex; flex-direction: column; align-items: center; }
@@ -49,7 +63,7 @@
 <div class="app-container">
   
   <!-- Player 2 -->
-  <div class="player-area p2" id="p2-area">
+  <div class="player-area p2 inactive-turn" id="p2-area">
     <div class="stats-header">
       <div class="stat-group">
         <span class="stat-label">スコア (IP)</span>
@@ -79,7 +93,7 @@
   </div>
 
   <!-- Player 1 -->
-  <div class="player-area p1" id="p1-area">
+  <div class="player-area p1 active-turn" id="p1-area">
     <div class="stats-header">
       <div class="stat-group">
         <span class="stat-label">スコア (IP)</span>
@@ -105,13 +119,10 @@
 </div>
 
 <script>
-  // Wikiのカード情報を管理するデータベース
-  // ※ ここにFandom WikiのカードNo, 名前, 最大HP, IPを追記していくことで自動反映されます
   const cardDB = {
     "001": { name: "Alchemist", maxHp: 4, ip: 1 },
     "002": { name: "Hop Master", maxHp: 6, ip: 2 },
     "003": { name: "Dark Stout", maxHp: 5, ip: 3 },
-    // 必要なカード情報を適宜追加してください
   };
 
   let state = {
@@ -129,6 +140,22 @@
     document.getElementById('p1-energy').innerText = state.p1.energy;
     document.getElementById('p2-score').innerText = state.p2.score;
     document.getElementById('p2-energy').innerText = state.p2.energy;
+    
+    // ターンハイライトの切り替え
+    const p1Area = document.getElementById('p1-area');
+    const p2Area = document.getElementById('p2-area');
+    
+    if (state.activePlayer === 1) {
+      p1Area.classList.add('active-turn');
+      p1Area.classList.remove('inactive-turn');
+      p2Area.classList.add('inactive-turn');
+      p2Area.classList.remove('active-turn');
+    } else {
+      p2Area.classList.add('active-turn');
+      p2Area.classList.remove('inactive-turn');
+      p1Area.classList.add('inactive-turn');
+      p1Area.classList.remove('active-turn');
+    }
     
     renderBoard(1);
     renderBoard(2);
@@ -156,13 +183,11 @@
     let ipVal = 0;
     let nameStr = "No." + cardNo;
 
-    // DBからカード情報を検索
     if (cardDB[cardNo]) {
       maxHpVal = cardDB[cardNo].maxHp;
       ipVal = cardDB[cardNo].ip;
       if(cardDB[cardNo].name) nameStr = cardDB[cardNo].name;
     } else {
-      // 登録されていないカードのフェイルセーフ処理（※手動で入力させる挙動と推測して実装）
       const hpInput = prompt(`No.${cardNo}が見つかりません。最大HPを手動で入力してください:`, "5");
       if (hpInput === null) return;
       maxHpVal = parseInt(hpInput, 10) || 5;
@@ -189,9 +214,7 @@
     const char = player.chars.find(c => c.id === id);
     if(char) {
       char.hp += change;
-      // HPが最大HPを超えないように制限
       if(char.hp > char.maxHp) char.hp = char.maxHp;
-      // HPが0以下になったら自動削除
       if(char.hp <= 0) {
         player.chars = player.chars.filter(c => c.id !== id);
       }
@@ -229,18 +252,15 @@
   function nextTurn() {
     if(state.gameOver) return;
 
-    // 1. ターンエンド時、現在のアクティブプレイヤーの盤面IPを合計してスコアに加算
     const activePlayerState = state['p' + state.activePlayer];
     const totalBoardIp = activePlayerState.chars.reduce((sum, char) => sum + char.ip, 0);
     updateMain(state.activePlayer, 'score', totalBoardIp);
 
-    if (state.gameOver) return; // IP加算で勝利した場合は処理を中断
+    if (state.gameOver) return;
 
-    // 2. ターン交代処理
     state.activePlayer = state.activePlayer === 1 ? 2 : 1;
     if (state.activePlayer === 1) state.turn++;
     
-    // 3. 次のプレイヤーのエネルギー処理
     const nextPlayerState = state['p' + state.activePlayer];
     nextPlayerState.maxEnergy++;
     nextPlayerState.energy = nextPlayerState.maxEnergy;
