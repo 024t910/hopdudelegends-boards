@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hop Dude Legends Tracker</title>
+<style>
+  * { box-sizing: border-box; }
+  body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #111; font-family: sans-serif; overflow: hidden; user-select: none; color: #fff; touch-action: manipulation; }
+  
+  .app-container { display: flex; flex-direction: column; height: 100%; }
+  
+  .player-area { flex: 1; display: flex; flex-direction: column; padding: 10px; overflow: hidden; }
+  .p2 { background: #2c3e50; transform: rotate(180deg); }
+  .p1 { background: #34495e; }
+  
+  .stats-header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+  .stat-group { display: flex; flex-direction: column; align-items: center; }
+  .stat-label { font-size: 12px; color: #bdc3c7; margin-bottom: 4px; }
+  .stat-controls { display: flex; align-items: center; gap: 8px; }
+  
+  .btn { background: #555; border: none; color: white; font-size: 18px; font-weight: bold; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; }
+  .btn:active { background: #777; }
+  .btn-add-char { background: #27ae60; width: auto; padding: 0 15px; font-size: 14px; }
+  .btn-add-char:active { background: #2ecc71; }
+  
+  .val { font-size: 22px; font-weight: bold; min-width: 32px; text-align: center; }
+  .score-val { color: #f1c40f; font-size: 28px; }
+  
+  .board-area { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; padding-bottom: 5px; }
+  .board-area::-webkit-scrollbar { display: none; }
+  
+  .char-card { position: relative; background: #1a252f; padding: 12px 8px 8px 8px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; min-width: 100px; border: 1px solid #7f8c8d; }
+  .char-label { font-size: 12px; margin-bottom: 6px; color: #ecf0f1; }
+  
+  .btn-remove { position: absolute; top: -5px; right: -5px; background: #c0392b; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .btn-remove:active { background: #e74c3c; }
+
+  .center-bar { height: 55px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; border-top: 2px solid #e67e22; border-bottom: 2px solid #e67e22; }
+  .turn-text { font-size: 16px; font-weight: bold; color: #e67e22; }
+  .next-btn { background: #e67e22; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 15px; cursor: pointer; }
+  .next-btn:active { background: #d35400; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  
+  <!-- Player 2 -->
+  <div class="player-area p2" id="p2-area">
+    <div class="stats-header">
+      <div class="stat-group">
+        <span class="stat-label">スコア (IP)</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(2, 'score', -1)">-</button>
+          <span class="val score-val" id="p2-score">0</span>
+          <button class="btn" onclick="updateMain(2, 'score', 1)">+</button>
+        </div>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">エネルギー</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(2, 'energy', -1)">-</button>
+          <span class="val" id="p2-energy">0</span>
+          <button class="btn" onclick="updateMain(2, 'energy', 1)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-add-char" onclick="addChar(2)">+ キャラ</button>
+    </div>
+    <div class="board-area" id="p2-board"></div>
+  </div>
+
+  <!-- Center Bar -->
+  <div class="center-bar">
+    <div class="turn-text">Turn: <span id="turn-display">1</span></div>
+    <button class="next-btn" onclick="nextTurn()">次のターンへ</button>
+  </div>
+
+  <!-- Player 1 -->
+  <div class="player-area p1" id="p1-area">
+    <div class="stats-header">
+      <div class="stat-group">
+        <span class="stat-label">スコア (IP)</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(1, 'score', -1)">-</button>
+          <span class="val score-val" id="p1-score">0</span>
+          <button class="btn" onclick="updateMain(1, 'score', 1)">+</button>
+        </div>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">エネルギー</span>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateMain(1, 'energy', -1)">-</button>
+          <span class="val" id="p1-energy">1</span>
+          <button class="btn" onclick="updateMain(1, 'energy', 1)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-add-char" onclick="addChar(1)">+ キャラ</button>
+    </div>
+    <div class="board-area" id="p1-board"></div>
+  </div>
+  
+</div>
+
+<script>
+  let state = {
+    turn: 1,
+    activePlayer: 1,
+    p1: { score: 0, energy: 1, maxEnergy: 1, chars: [] },
+    p2: { score: 0, energy: 0, maxEnergy: 0, chars: [] },
+    charIdCounter: 0
+  };
+
+  function updateDisplay() {
+    document.getElementById('turn-display').innerText = state.turn;
+    document.getElementById('p1-score').innerText = state.p1.score;
+    document.getElementById('p1-energy').innerText = state.p1.energy;
+    document.getElementById('p2-score').innerText = state.p2.score;
+    document.getElementById('p2-energy').innerText = state.p2.energy;
+    
+    renderBoard(1);
+    renderBoard(2);
+  }
+
+  function updateMain(p, stat, change) {
+    const player = state['p' + p];
+    player[stat] = Math.max(0, player[stat] + change);
+    if(stat === 'score' && player[stat] >= 20) {
+      setTimeout(() => alert(`Player ${p} Wins!`), 50);
+    }
+    updateDisplay();
+  }
+
+  function addChar(p) {
+    // 任意の初期ライフを入力
+    const input = prompt("キャラクターの初期ライフ(HP)を数値で入力してください:", "");
+    if (input === null || input.trim() === "") return;
+    
+    const hpVal = parseInt(input, 10);
+    if (isNaN(hpVal)) {
+      alert("有効な数値を入力してください。");
+      return;
+    }
+    
+    state['p' + p].chars.push({ id: state.charIdCounter++, hp: hpVal });
+    updateDisplay();
+  }
+
+  function updateCharHp(p, id, change) {
+    const player = state['p' + p];
+    const char = player.chars.find(c => c.id === id);
+    if(char) {
+      char.hp += change;
+      // HPが0以下になったら自動削除
+      if(char.hp <= 0) {
+        player.chars = player.chars.filter(c => c.id !== id);
+      }
+    }
+    updateDisplay();
+  }
+
+  function removeChar(p, id) {
+    state['p' + p].chars = state['p' + p].chars.filter(c => c.id !== id);
+    updateDisplay();
+  }
+
+  function renderBoard(p) {
+    const board = document.getElementById(`p${p}-board`);
+    board.innerHTML = '';
+    state['p' + p].chars.forEach(char => {
+      const el = document.createElement('div');
+      el.className = 'char-card';
+      el.innerHTML = `
+        <button class="btn-remove" onclick="removeChar(${p}, ${char.id})">×</button>
+        <div class="char-label">HP</div>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, -1)">-</button>
+          <span class="val">${char.hp}</span>
+          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, 1)">+</button>
+        </div>
+      `;
+      board.appendChild(el);
+    });
+  }
+
+  function nextTurn() {
+    state.activePlayer = state.activePlayer === 1 ? 2 : 1;
+    if (state.activePlayer === 1) state.turn++;
+    
+    const p = state['p' + state.activePlayer];
+    p.maxEnergy++;
+    p.energy = p.maxEnergy;
+    
+    updateDisplay();
+  }
+
+  updateDisplay();
+</script>
+</body>
+</html>
