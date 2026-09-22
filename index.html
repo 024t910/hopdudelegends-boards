@@ -56,6 +56,7 @@
 
   .center-bar { height: 50px; background: #000; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 10; border-top: 2px solid #e67e22; border-bottom: 2px solid #e67e22; }
   .turn-text { font-size: 14px; font-weight: bold; color: #e67e22; }
+  .version-info { font-size: 9px; color: #7f8c8d; text-align: center; display: flex; flex-direction: column; line-height: 1.2; margin: 0 5px; }
   .next-btn { background: #e67e22; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; }
   .next-btn:active { background: #d35400; }
 
@@ -104,6 +105,10 @@
   <!-- Center Bar -->
   <div class="center-bar">
     <div class="turn-text">Turn: <span id="turn-display">1</span></div>
+    <div class="version-info">
+      <span>Ver. 2026.09.23.07.22</span>
+      <span>DB: 2026/09/23</span>
+    </div>
     <button class="next-btn" onclick="nextTurn()">ターンエンド (IP合算)</button>
   </div>
 
