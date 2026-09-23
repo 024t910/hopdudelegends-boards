@@ -122,7 +122,7 @@
   <div class="center-bar">
     <div class="turn-text">Turn: <span id="turn-display">1</span></div>
     <div class="version-info">
-      <span>Ver. 2026.09.23.08.49</span>
+      <span>Ver. 2026.09.23.11.43</span>
       <span>DB: 2026/09/23</span>
     </div>
     <button class="next-btn" onclick="nextTurn()">ターンエンド (IP合算)</button>
@@ -455,9 +455,7 @@
       char[stat] += change;
       if (stat === 'hp') {
         if(char.hp > char.maxHp) char.hp = char.maxHp;
-        if(char.hp <= 0) {
-          player.chars = player.chars.filter(c => c.id !== id);
-        }
+        // HPが0以下になっても自動削除しない
       } else if (stat === 'attack') {
         if(char.attack < 0) char.attack = 0;
       }
@@ -523,13 +521,3 @@
 </script>
 </body>
 </html>
-```
-
-**[Commit Log]**
-*   `feat`: Add `attack` (Power) attribute to all 100 entries in the hardcoded `cardDB` based on the Fandom Wiki reference data.
-*   `feat`: Update card state model to support and track `attack` attribute alongside `hp`.
-*   `ui`: Redesign `.char-card` layout to stack interactive controls for both `ATK` and `HP`, enabling users to manually track buffs/debuffs during gameplay.
-*   `refactor`: Generalize `updateCharHp` to `updateCharStat` to handle modifications for any character stat (both `hp` and `attack`) securely.
-*   `chore`: Update application version to `Ver. 2026.09.23.08.49`.
-
-※本件の機能追加につきましても、やり取りの要旨をGoogle Docsへの記録を完了いたしました。
