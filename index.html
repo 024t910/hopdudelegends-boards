@@ -47,9 +47,11 @@
   
   .char-card { position: relative; background: #1a252f; padding: 12px 6px 6px 6px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; min-width: 105px; border: 1px solid #7f8c8d; }
   .char-name { font-size: 10px; color: #ecf0f1; margin-bottom: 2px; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .char-ip { font-size: 12px; color: #f1c40f; font-weight: bold; margin-bottom: 4px; }
-  .char-hp-label { font-size: 9px; color: #bdc3c7; margin-bottom: 2px; }
-  .char-hp-val { font-size: 16px; font-weight: bold; width: 45px; text-align: center; }
+  .char-ip { font-size: 11px; color: #f1c40f; font-weight: bold; margin-bottom: 4px; text-align: center; }
+  
+  .char-stat-label { font-size: 9px; color: #bdc3c7; margin-bottom: 2px; margin-top: 4px; }
+  .char-stat-val { font-size: 15px; font-weight: bold; width: 35px; text-align: center; }
+  .char-card .btn { width: 28px; height: 28px; font-size: 16px; }
   
   .btn-remove { position: absolute; top: -5px; right: -5px; background: #c0392b; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 5; }
   .btn-remove:active { background: #e74c3c; }
@@ -120,7 +122,7 @@
   <div class="center-bar">
     <div class="turn-text">Turn: <span id="turn-display">1</span></div>
     <div class="version-info">
-      <span>Ver. 2026.09.23.07.42</span>
+      <span>Ver. 2026.09.23.08.49</span>
       <span>DB: 2026/09/23</span>
     </div>
     <button class="next-btn" onclick="nextTurn()">ターンエンド (IP合算)</button>
@@ -180,108 +182,108 @@
 </div>
 
 <script>
-  // ハードコードされたカードデータベース (001〜100)
+  // ハードコードされたカードデータベース (001〜100) + Attack(Power) 追加
   const cardDB = {
-    "1": { name: "Hop Dude", cost: 1, maxHp: 3, ip: 0 },
-    "2": { name: "Starwatcher", cost: 2, maxHp: 4, ip: 0 },
-    "3": { name: "Full Hop Alchemist", cost: 2, maxHp: 3, ip: 0 },
-    "4": { name: "Breakwater", cost: 1, maxHp: 3, ip: 0 },
-    "5": { name: "No Clouds No Problem", cost: 1, maxHp: 3, ip: 0 },
-    "6": { name: "Hop & Escape", cost: 2, maxHp: 4, ip: 0 },
-    "7": { name: "The Prodigy", cost: 2, maxHp: 3, ip: 1 },
-    "8": { name: "Future Alchemist", cost: 3, maxHp: 5, ip: 0 },
-    "9": { name: "White Wizard", cost: 3, maxHp: 4, ip: 0 },
-    "10": { name: "That Magma", cost: 3, maxHp: 3, ip: 0 },
-    "11": { name: "Little Cauldron Boy", cost: 3, maxHp: 5, ip: 0 },
-    "12": { name: "The Sheriff", cost: 3, maxHp: 4, ip: 1 },
-    "13": { name: "The Nemesis", cost: 2, maxHp: 1, ip: 1 },
-    "14": { name: "The Dark Prodigy", cost: 3, maxHp: 3, ip: 0 },
-    "15": { name: "The Black Wizard", cost: 2, maxHp: 2, ip: 0 },
-    "16": { name: "The Voidmaster Ced", cost: 2, maxHp: 1, ip: 0 },
-    "17": { name: "Dark Crispi Boi", cost: 1, maxHp: 1, ip: 0 },
-    "18": { name: "The Hop Breaker", cost: 2, maxHp: 2, ip: 0 },
-    "19": { name: "The Technician", cost: 3, maxHp: 3, ip: 0 },
-    "20": { name: "Black Market Trader", cost: 2, maxHp: 2, ip: 0 },
-    "21": { name: "The Scavenger", cost: 2, maxHp: 2, ip: 0 },
-    "22": { name: "The Gambler", cost: 3, maxHp: 3, ip: 0 },
-    "23": { name: "The Traveler", cost: 3, maxHp: 2, ip: 0 },
-    "24": { name: "Brass Monkey", cost: 3, maxHp: 2, ip: 0 },
-    "25": { name: "Mochimune", cost: 0, maxHp: 0, ip: 0 },
-    "26": { name: "The Villa", cost: 0, maxHp: 0, ip: 0 },
-    "27": { name: "Twelve (12)", cost: 0, maxHp: 0, ip: 0 },
-    "28": { name: "第三番移動式冷蔵庫", cost: 0, maxHp: 0, ip: 0 },
-    "29": { name: "Oasis", cost: 0, maxHp: 0, ip: 0 },
-    "30": { name: "The Dark Lab", cost: 0, maxHp: 0, ip: 0 },
-    "31": { name: "Umeda 1", cost: 0, maxHp: 0, ip: 0 },
-    "32": { name: "包", cost: 0, maxHp: 0, ip: 0 },
-    "33": { name: "十二番", cost: 0, maxHp: 0, ip: 0 },
-    "34": { name: "Hopbeat Records", cost: 0, maxHp: 0, ip: 0 },
-    "35": { name: "The Room", cost: 0, maxHp: 0, ip: 0 },
-    "36": { name: "北谷", cost: 0, maxHp: 0, ip: 0 },
-    "37": { name: "Crispi Boi", cost: 2, maxHp: 4, ip: 0 },
-    "38": { name: "Swell Boi", cost: 3, maxHp: 5, ip: 0 },
-    "39": { name: "Creami Boi", cost: 4, maxHp: 4, ip: 0 },
-    "40": { name: "Handi Boi", cost: 2, maxHp: 4, ip: 0 },
-    "41": { name: "Sour Grrl", cost: 4, maxHp: 4, ip: 0 },
-    "42": { name: "Chill Grrl", cost: 3, maxHp: 5, ip: 0 },
-    "43": { name: "Creative Grrl", cost: 2, maxHp: 4, ip: 0 },
-    "44": { name: "Nature Boi", cost: 4, maxHp: 4, ip: 0 },
-    "45": { name: "Wandering Boi", cost: 3, maxHp: 5, ip: 0 },
-    "46": { name: "The Gateway", cost: 3, maxHp: 2, ip: 0 },
-    "47": { name: "Slumber Party", cost: 1, maxHp: 1, ip: 0 },
-    "48": { name: "His Dark Secrets", cost: 3, maxHp: 2, ip: 0 },
-    "49": { name: "The Black Book", cost: 1, maxHp: 1, ip: 0 },
-    "50": { name: "Dark Torrent", cost: 3, maxHp: 3, ip: 1 },
-    "51": { name: "Apricot Fruit Monster", cost: 3, maxHp: 2, ip: 1 },
-    "52": { name: "Strawberry Fruit Monster", cost: 3, maxHp: 4, ip: 1 },
-    "53": { name: "Mango Fruit Monster", cost: 4, maxHp: 3, ip: 1 },
-    "54": { name: "Watermelon Fruit Monster", cost: 4, maxHp: 6, ip: 1 },
-    "55": { name: "Singularity: Peacharine", cost: 3, maxHp: 0, ip: 0 },
-    "56": { name: "Singularity: Rakau", cost: 3, maxHp: 0, ip: 0 },
-    "57": { name: "Singularity: Kohatu", cost: 4, maxHp: 0, ip: 0 },
-    "58": { name: "Singularity: Wakatu", cost: 4, maxHp: 0, ip: 0 },
-    "59": { name: "Singularity: El Dorado", cost: 4, maxHp: 0, ip: 0 },
-    "60": { name: "Singularity: Citra", cost: 5, maxHp: 0, ip: 0 },
-    "61": { name: "Singularity: Nelson", cost: 5, maxHp: 0, ip: 0 },
-    "62": { name: "Singularity: Strata", cost: 5, maxHp: 0, ip: 0 },
-    "63": { name: "WCB 1st Anniversary", cost: 1, maxHp: 0, ip: 0 },
-    "64": { name: "WCB 2nd Anniversary", cost: 1, maxHp: 0, ip: 0 },
-    "65": { name: "WCB 3rd Anniversary", cost: 2, maxHp: 0, ip: 0 },
-    "66": { name: "WCB 4th Anniversary", cost: 2, maxHp: 0, ip: 0 },
-    "67": { name: "WCB 5th Anniversary", cost: 3, maxHp: 0, ip: 0 },
-    "68": { name: "WCB 6th Anniversary", cost: 3, maxHp: 0, ip: 0 },
-    "69": { name: "WCB 7th Anniversary", cost: 4, maxHp: 0, ip: 0 },
-    "70": { name: "Super Sunrise", cost: 4, maxHp: 0, ip: 0 },
-    "71": { name: "Pineapple Party", cost: 3, maxHp: 2, ip: 1 },
-    "72": { name: "Mango Party", cost: 3, maxHp: 3, ip: 1 },
-    "73": { name: "Peach Party", cost: 4, maxHp: 3, ip: 1 },
-    "74": { name: "Passionfruit Party", cost: 4, maxHp: 4, ip: 1 },
-    "75": { name: "FHAv16", cost: 5, maxHp: 7, ip: 2 },
-    "76": { name: "FHAv23", cost: 4, maxHp: 6, ip: 2 },
-    "77": { name: "FHAv30", cost: 6, maxHp: 6, ip: 2 },
-    "78": { name: "FHAv37", cost: 4, maxHp: 6, ip: 1 },
-    "79": { name: "FHAr1", cost: 5, maxHp: 0, ip: 0 },
-    "80": { name: "Starwatcher Cryo", cost: 5, maxHp: 6, ip: 2 },
-    "81": { name: "Starwatcher Midnight", cost: 4, maxHp: 4, ip: 2 },
-    "82": { name: "Starwatcher CBD", cost: 5, maxHp: 4, ip: 2 },
-    "83": { name: "MU", cost: 5, maxHp: 4, ip: 3 },
-    "84": { name: "RA", cost: 4, maxHp: 3, ip: 3 },
-    "85": { name: "AHM", cost: 6, maxHp: 5, ip: 2 },
-    "86": { name: "Super Spicy Slumber Party", cost: 5, maxHp: 4, ip: 2 },
-    "87": { name: "The Hop-Breaker Unleashed", cost: 6, maxHp: 5, ip: 2 },
-    "88": { name: "Very Creami Boi", cost: 5, maxHp: 6, ip: 1 },
-    "89": { name: "Super Handi Boi", cost: 5, maxHp: 7, ip: 1 },
-    "90": { name: "Doctor Dankness", cost: 6, maxHp: 5, ip: 3 },
-    "91": { name: "Underground Hero", cost: 6, maxHp: 5, ip: 3 },
-    "92": { name: "Black Light", cost: 6, maxHp: 9, ip: 3 },
-    "93": { name: "Instant Classic", cost: 0, maxHp: 0, ip: 0 },
-    "94": { name: "Midtown Popup", cost: 0, maxHp: 0, ip: 0 },
-    "95": { name: "The Archnemesis", cost: 7, maxHp: 7, ip: 4 },
-    "96": { name: "FHA X", cost: 7, maxHp: 11, ip: 4 },
-    "97": { name: "The Alchemists' Shadow", cost: 7, maxHp: 8, ip: 5 },
-    "98": { name: "Ultima", cost: 8, maxHp: 14, ip: 5 },
-    "99": { name: "The Hop Oracle", cost: 8, maxHp: 12, ip: 6 },
-    "100": { name: "The Guardian", cost: 8, maxHp: 10, ip: 5 }
+    "1": { name: "Hop Dude", cost: 1, attack: 1, maxHp: 3, ip: 0 },
+    "2": { name: "Starwatcher", cost: 2, attack: 2, maxHp: 4, ip: 0 },
+    "3": { name: "Full Hop Alchemist", cost: 2, attack: 1, maxHp: 3, ip: 0 },
+    "4": { name: "Breakwater", cost: 1, attack: 1, maxHp: 3, ip: 0 },
+    "5": { name: "No Clouds No Problem", cost: 1, attack: 1, maxHp: 3, ip: 0 },
+    "6": { name: "Hop & Escape", cost: 2, attack: 2, maxHp: 4, ip: 0 },
+    "7": { name: "The Prodigy", cost: 2, attack: 1, maxHp: 3, ip: 1 },
+    "8": { name: "Future Alchemist", cost: 3, attack: 2, maxHp: 5, ip: 0 },
+    "9": { name: "White Wizard", cost: 3, attack: 3, maxHp: 4, ip: 0 },
+    "10": { name: "That Magma", cost: 3, attack: 3, maxHp: 3, ip: 0 },
+    "11": { name: "Little Cauldron Boy", cost: 3, attack: 2, maxHp: 5, ip: 0 },
+    "12": { name: "The Sheriff", cost: 3, attack: 3, maxHp: 4, ip: 1 },
+    "13": { name: "The Nemesis", cost: 2, attack: 4, maxHp: 1, ip: 1 },
+    "14": { name: "The Dark Prodigy", cost: 3, attack: 4, maxHp: 3, ip: 0 },
+    "15": { name: "The Black Wizard", cost: 2, attack: 3, maxHp: 2, ip: 0 },
+    "16": { name: "The Voidmaster Ced", cost: 2, attack: 4, maxHp: 1, ip: 0 },
+    "17": { name: "Dark Crispi Boi", cost: 1, attack: 2, maxHp: 1, ip: 0 },
+    "18": { name: "The Hop Breaker", cost: 2, attack: 3, maxHp: 2, ip: 0 },
+    "19": { name: "The Technician", cost: 3, attack: 2, maxHp: 3, ip: 0 },
+    "20": { name: "Black Market Trader", cost: 2, attack: 2, maxHp: 2, ip: 0 },
+    "21": { name: "The Scavenger", cost: 2, attack: 2, maxHp: 2, ip: 0 },
+    "22": { name: "The Gambler", cost: 3, attack: 2, maxHp: 3, ip: 0 },
+    "23": { name: "The Traveler", cost: 3, attack: 3, maxHp: 2, ip: 0 },
+    "24": { name: "Brass Monkey", cost: 3, attack: 3, maxHp: 2, ip: 0 },
+    "25": { name: "Mochimune", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "26": { name: "The Villa", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "27": { name: "Twelve (12)", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "28": { name: "第三番移動式冷蔵庫", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "29": { name: "Oasis", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "30": { name: "The Dark Lab", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "31": { name: "Umeda 1", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "32": { name: "包", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "33": { name: "十二番", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "34": { name: "Hopbeat Records", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "35": { name: "The Room", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "36": { name: "北谷", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "37": { name: "Crispi Boi", cost: 2, attack: 0, maxHp: 4, ip: 0 },
+    "38": { name: "Swell Boi", cost: 3, attack: 0, maxHp: 5, ip: 0 },
+    "39": { name: "Creami Boi", cost: 4, attack: 1, maxHp: 4, ip: 0 },
+    "40": { name: "Handi Boi", cost: 2, attack: 0, maxHp: 4, ip: 0 },
+    "41": { name: "Sour Grrl", cost: 4, attack: 1, maxHp: 4, ip: 0 },
+    "42": { name: "Chill Grrl", cost: 3, attack: 0, maxHp: 5, ip: 0 },
+    "43": { name: "Creative Grrl", cost: 2, attack: 0, maxHp: 4, ip: 0 },
+    "44": { name: "Nature Boi", cost: 4, attack: 1, maxHp: 4, ip: 0 },
+    "45": { name: "Wandering Boi", cost: 3, attack: 0, maxHp: 5, ip: 0 },
+    "46": { name: "The Gateway", cost: 3, attack: 3, maxHp: 2, ip: 0 },
+    "47": { name: "Slumber Party", cost: 1, attack: 2, maxHp: 1, ip: 0 },
+    "48": { name: "His Dark Secrets", cost: 3, attack: 3, maxHp: 2, ip: 0 },
+    "49": { name: "The Black Book", cost: 1, attack: 2, maxHp: 1, ip: 0 },
+    "50": { name: "Dark Torrent", cost: 3, attack: 4, maxHp: 3, ip: 1 },
+    "51": { name: "Apricot Fruit Monster", cost: 3, attack: 3, maxHp: 2, ip: 1 },
+    "52": { name: "Strawberry Fruit Monster", cost: 3, attack: 2, maxHp: 4, ip: 1 },
+    "53": { name: "Mango Fruit Monster", cost: 4, attack: 4, maxHp: 3, ip: 1 },
+    "54": { name: "Watermelon Fruit Monster", cost: 4, attack: 1, maxHp: 6, ip: 1 },
+    "55": { name: "Singularity: Peacharine", cost: 3, attack: 0, maxHp: 0, ip: 0 },
+    "56": { name: "Singularity: Rakau", cost: 3, attack: 0, maxHp: 0, ip: 0 },
+    "57": { name: "Singularity: Kohatu", cost: 4, attack: 0, maxHp: 0, ip: 0 },
+    "58": { name: "Singularity: Wakatu", cost: 4, attack: 0, maxHp: 0, ip: 0 },
+    "59": { name: "Singularity: El Dorado", cost: 4, attack: 0, maxHp: 0, ip: 0 },
+    "60": { name: "Singularity: Citra", cost: 5, attack: 0, maxHp: 0, ip: 0 },
+    "61": { name: "Singularity: Nelson", cost: 5, attack: 0, maxHp: 0, ip: 0 },
+    "62": { name: "Singularity: Strata", cost: 5, attack: 0, maxHp: 0, ip: 0 },
+    "63": { name: "WCB 1st Anniversary", cost: 1, attack: 0, maxHp: 0, ip: 0 },
+    "64": { name: "WCB 2nd Anniversary", cost: 1, attack: 0, maxHp: 0, ip: 0 },
+    "65": { name: "WCB 3rd Anniversary", cost: 2, attack: 0, maxHp: 0, ip: 0 },
+    "66": { name: "WCB 4th Anniversary", cost: 2, attack: 0, maxHp: 0, ip: 0 },
+    "67": { name: "WCB 5th Anniversary", cost: 3, attack: 0, maxHp: 0, ip: 0 },
+    "68": { name: "WCB 6th Anniversary", cost: 3, attack: 0, maxHp: 0, ip: 0 },
+    "69": { name: "WCB 7th Anniversary", cost: 4, attack: 0, maxHp: 0, ip: 0 },
+    "70": { name: "Super Sunrise", cost: 4, attack: 0, maxHp: 0, ip: 0 },
+    "71": { name: "Pineapple Party", cost: 3, attack: 3, maxHp: 2, ip: 1 },
+    "72": { name: "Mango Party", cost: 3, attack: 2, maxHp: 3, ip: 1 },
+    "73": { name: "Peach Party", cost: 4, attack: 3, maxHp: 3, ip: 1 },
+    "74": { name: "Passionfruit Party", cost: 4, attack: 2, maxHp: 4, ip: 1 },
+    "75": { name: "FHAv16", cost: 5, attack: 4, maxHp: 7, ip: 2 },
+    "76": { name: "FHAv23", cost: 4, attack: 3, maxHp: 6, ip: 2 },
+    "77": { name: "FHAv30", cost: 6, attack: 5, maxHp: 6, ip: 2 },
+    "78": { name: "FHAv37", cost: 4, attack: 1, maxHp: 6, ip: 1 },
+    "79": { name: "FHAr1", cost: 5, attack: 0, maxHp: 0, ip: 0 },
+    "80": { name: "Starwatcher Cryo", cost: 5, attack: 4, maxHp: 6, ip: 2 },
+    "81": { name: "Starwatcher Midnight", cost: 4, attack: 3, maxHp: 4, ip: 2 },
+    "82": { name: "Starwatcher CBD", cost: 5, attack: 4, maxHp: 4, ip: 2 },
+    "83": { name: "MU", cost: 5, attack: 6, maxHp: 4, ip: 3 },
+    "84": { name: "RA", cost: 4, attack: 5, maxHp: 3, ip: 3 },
+    "85": { name: "AHM", cost: 6, attack: 7, maxHp: 5, ip: 2 },
+    "86": { name: "Super Spicy Slumber Party", cost: 5, attack: 5, maxHp: 4, ip: 2 },
+    "87": { name: "The Hop-Breaker Unleashed", cost: 6, attack: 5, maxHp: 5, ip: 2 },
+    "88": { name: "Very Creami Boi", cost: 5, attack: 2, maxHp: 6, ip: 1 },
+    "89": { name: "Super Handi Boi", cost: 5, attack: 1, maxHp: 7, ip: 1 },
+    "90": { name: "Doctor Dankness", cost: 6, attack: 9, maxHp: 5, ip: 3 },
+    "91": { name: "Underground Hero", cost: 6, attack: 5, maxHp: 5, ip: 3 },
+    "92": { name: "Black Light", cost: 6, attack: 6, maxHp: 9, ip: 3 },
+    "93": { name: "Instant Classic", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "94": { name: "Midtown Popup", cost: 0, attack: 0, maxHp: 0, ip: 0 },
+    "95": { name: "The Archnemesis", cost: 7, attack: 10, maxHp: 7, ip: 4 },
+    "96": { name: "FHA X", cost: 7, attack: 7, maxHp: 11, ip: 4 },
+    "97": { name: "The Alchemists' Shadow", cost: 7, attack: 8, maxHp: 8, ip: 5 },
+    "98": { name: "Ultima", cost: 8, attack: 9, maxHp: 14, ip: 5 },
+    "99": { name: "The Hop Oracle", cost: 8, attack: 8, maxHp: 12, ip: 6 },
+    "100": { name: "The Guardian", cost: 8, attack: 13, maxHp: 10, ip: 5 }
   };
 
   let state = {
@@ -318,16 +320,16 @@
 
       if (type === 'prompt') {
         inputEl.classList.remove('hidden');
-        numpadEl.classList.remove('hidden'); // テンキーを表示
+        numpadEl.classList.remove('hidden');
         inputEl.value = '';
         btnCancel.classList.remove('hidden');
       } else if (type === 'confirm') {
         inputEl.classList.add('hidden');
-        numpadEl.classList.add('hidden'); // テンキーを非表示
+        numpadEl.classList.add('hidden');
         btnCancel.classList.remove('hidden');
       } else if (type === 'alert') {
         inputEl.classList.add('hidden');
-        numpadEl.classList.add('hidden'); // テンキーを非表示
+        numpadEl.classList.add('hidden');
         btnCancel.classList.add('hidden');
       }
 
@@ -409,7 +411,6 @@
     const input = await showModal('prompt', "カードNo.を入力してください:");
     if (input === null || input.trim() === "") return;
     
-    // 入力値からゼロ埋めを削除して検索（1でも001でもヒットさせる）
     const cardNo = parseInt(input.trim(), 10).toString();
     
     if (!cardDB[cardNo]) {
@@ -419,6 +420,7 @@
 
     const dbEntry = cardDB[cardNo];
     const costVal = dbEntry.cost;
+    const attackVal = dbEntry.attack;
     const maxHpVal = dbEntry.maxHp;
     const ipVal = dbEntry.ip;
     const nameStr = dbEntry.name || `No.${cardNo}`;
@@ -436,6 +438,7 @@
       id: state.charIdCounter++, 
       cardNo: cardNo,
       name: nameStr,
+      attack: attackVal,
       maxHp: maxHpVal, 
       hp: maxHpVal, 
       ip: ipVal 
@@ -444,15 +447,19 @@
     updateDisplay();
   }
 
-  function updateCharHp(p, id, change) {
+  function updateCharStat(p, id, stat, change) {
     if(state.gameOver) return;
     const player = state['p' + p];
     const char = player.chars.find(c => c.id === id);
     if(char) {
-      char.hp += change;
-      if(char.hp > char.maxHp) char.hp = char.maxHp;
-      if(char.hp <= 0) {
-        player.chars = player.chars.filter(c => c.id !== id);
+      char[stat] += change;
+      if (stat === 'hp') {
+        if(char.hp > char.maxHp) char.hp = char.maxHp;
+        if(char.hp <= 0) {
+          player.chars = player.chars.filter(c => c.id !== id);
+        }
+      } else if (stat === 'attack') {
+        if(char.attack < 0) char.attack = 0;
       }
     }
     updateDisplay();
@@ -474,11 +481,19 @@
         <button class="btn-remove" onclick="removeChar(${p}, ${char.id})">×</button>
         <div class="char-name" title="${char.name}">${char.name}</div>
         <div class="char-ip">IP: ${char.ip}</div>
-        <div class="char-hp-label">HP (Max: ${char.maxHp})</div>
+        
+        <div class="char-stat-label">ATK</div>
         <div class="stat-controls">
-          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, -1)">-</button>
-          <span class="char-hp-val">${char.hp}</span>
-          <button class="btn" onclick="updateCharHp(${p}, ${char.id}, 1)">+</button>
+          <button class="btn" onclick="updateCharStat(${p}, ${char.id}, 'attack', -1)">-</button>
+          <span class="char-stat-val">${char.attack}</span>
+          <button class="btn" onclick="updateCharStat(${p}, ${char.id}, 'attack', 1)">+</button>
+        </div>
+        
+        <div class="char-stat-label">HP (Max: ${char.maxHp})</div>
+        <div class="stat-controls">
+          <button class="btn" onclick="updateCharStat(${p}, ${char.id}, 'hp', -1)">-</button>
+          <span class="char-stat-val">${char.hp}</span>
+          <button class="btn" onclick="updateCharStat(${p}, ${char.id}, 'hp', 1)">+</button>
         </div>
       `;
       board.appendChild(el);
@@ -508,3 +523,13 @@
 </script>
 </body>
 </html>
+```
+
+**[Commit Log]**
+*   `feat`: Add `attack` (Power) attribute to all 100 entries in the hardcoded `cardDB` based on the Fandom Wiki reference data.
+*   `feat`: Update card state model to support and track `attack` attribute alongside `hp`.
+*   `ui`: Redesign `.char-card` layout to stack interactive controls for both `ATK` and `HP`, enabling users to manually track buffs/debuffs during gameplay.
+*   `refactor`: Generalize `updateCharHp` to `updateCharStat` to handle modifications for any character stat (both `hp` and `attack`) securely.
+*   `chore`: Update application version to `Ver. 2026.09.23.08.49`.
+
+※本件の機能追加につきましても、やり取りの要旨をGoogle Docsへの記録を完了いたしました。
