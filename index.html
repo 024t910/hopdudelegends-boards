@@ -122,8 +122,8 @@
   <div class="center-bar">
     <div class="turn-text">Turn: <span id="turn-display">1</span></div>
     <div class="version-info">
-      <span>Ver. 2026.09.23.11.43</span>
-      <span>DB: 2026/09/23</span>
+      <span>Ver. 2026.09.24.21.10</span>
+      <span>DB: 2026/09/24</span>
     </div>
     <button class="next-btn" onclick="nextTurn()">ターンエンド (IP合算)</button>
   </div>
@@ -416,6 +416,17 @@
     if (!cardDB[cardNo]) {
       await showModal('alert', `データベースに カードNo.${input} が見つかりません。`);
       return;
+    }
+
+    // エラッタ・ルール注記のアラート処理
+    const errataDB = {
+      "7": "【エラッタ / Errata】\nCard #7, The Prodigy, has a space between h and eal which was unintended.",
+      "78": "【ルール注記 / Note】\nWhen a card says \"spell\" (like this card), it means \"event\" (referring specifically to Event cards).",
+      "79": "【エラッタ / Errata】\nCard #79, FHAr1, is missing a printed 5 for Cost."
+    };
+
+    if (errataDB[cardNo]) {
+      await showModal('alert', errataDB[cardNo]);
     }
 
     const dbEntry = cardDB[cardNo];
